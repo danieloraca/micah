@@ -1,11 +1,14 @@
 //! Fixed, read-only commands. User input never becomes shell code or arguments.
+pub mod ai;
+pub mod persistence;
+pub mod runtime;
 use std::{
     process::{Command, Stdio},
     thread,
     time::{Duration, Instant},
 };
 
-pub const HELP: &str = "Hi Dan. I'm your local desktop companion. Try: mac status, pi status, time, or capabilities.\n\nI use fixed commands, not an AI model. No API keys, subscriptions, chat logging, or background recording. Character design can come later.";
+pub const HELP: &str = "Hi Dan. I'm Mica. Try: mac status, pi status, time, or capabilities.\n\nLocal commands stay on this Mac. Optional OpenAI text answers can be enabled in AI settings using your key, with optional macOS Keychain saving. API usage is billed separately from ChatGPT. No background recording or automatic submission. Character design can come later.";
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Intent {
@@ -117,7 +120,7 @@ pub fn pi_summary(loaded: bool, text: &str) -> String {
 pub fn respond(input: &str) -> String {
     match parse(input) {
         Intent::Help => HELP.into(),
-        Intent::Capabilities => "I can check this Mac's uptime, battery and OS; show local Pi sync agent state; and tell the time. These are read-only checks.\n\nConversation is a small set of offline commands, not a language model. Unknown requests do nothing.\n\nSpeak reply uses an installed macOS system voice on demand. This assistant's exact voice is not included or verified as reusable.\n\nClick-to-talk is experimental: English (US), device-only recognition, permission prompts on first click, 15-second limit, Stop anytime. Unsupported device recognition fails closed. A transcript fills the input for review; press Send yourself. No audio or transcript is saved by this app.\n\nThere is no wake word, always-on listening, paid service, automatic startup, or remote Pi control.".into(),
+        Intent::Capabilities => "I can check this Mac's uptime, battery and OS; show local Pi sync agent state; and tell the time. These are read-only local checks.\n\nThe local dispatcher is not a language model. Optional OpenAI answers require explicit user setup; non-command text and up to three previous AI turns are then sent to OpenAI when you press Send. API billing is separate from ChatGPT. No files, codebase, local status results, or audio are automatically uploaded. AI output cannot run tools or actions.\n\nSpeak reply uses an installed macOS system voice on demand. This assistant's exact voice is not included or verified as reusable.\n\nClick-to-talk is experimental: English (US), device-only recognition, permission prompts on first click, 15-second limit, Stop anytime. Unsupported device recognition fails closed. A transcript fills the input for review; press Send yourself. No audio or transcript is saved locally by this app.\n\nThere is no wake word, always-on listening, automatic startup, or remote Pi control.".into(),
         Intent::Mac => format!("Mac status — checked now\n\nUptime: {}\n\nBattery / power:\n{}\n\nmacOS: {}", check("/usr/bin/uptime", &[]), check("/usr/bin/pmset", &["-g", "batt"]), check("/usr/bin/sw_vers", &["-productVersion"])),
         Intent::Time => check("/bin/date", &["+%A, %d %B %Y at %H:%M:%S %Z"]),
         Intent::Pi => {

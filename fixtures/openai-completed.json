@@ -1,0 +1,8 @@
+{
+  "id": "resp_fixture_not_live",
+  "object": "response",
+  "model": "gpt-5.4-nano-2026-03-17",
+  "status": "completed",
+  "output": [{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "Fixture reply. No live API call.", "annotations": []}]}],
+  "usage": {"input_tokens": 120, "input_tokens_details": {"cached_tokens": 40}, "output_tokens": 30, "output_tokens_details": {"reasoning_tokens": 10}, "total_tokens": 150}
+}
