@@ -16,3 +16,11 @@ The later Keychain persistence adapter adds fake-store tests for explicit save/r
 
 After the user hit OSStatus -34018, the backend was changed explicitly to the encrypted macOS default file-based Keychain for ad-hoc-build compatibility. Native policy checks now verify that data-protection/access-group/synchronization/accessibility attributes are absent or disabled and the default caller-only ACL is left intact. The original policy above describes the superseded backend. New fake-store tests establish that a valid typed key enables session use even when optional saving fails, while missing saved keys do not produce false enable success. No real Keychain item or API call is used in those tests.
 
+## Optional OpenAI audio
+
+`src/voice.rs` implements the documented Realtime WebSocket `session.created` → session.update (turn detection/transcription off, no tools) → session.updated → response.create (audio modality, explicit text-only input, conversation none, output cap) → audio deltas → response.done sequence. It uses `gpt-realtime-2.1-mini` and the current documented built-in voice allowlist. Endpoint and TLS hostname are fixed; Authorization is marked sensitive and never logged. Fresh connections carry one response and no microphone bytes. The output transcript is taken from the generated audio response, not invented separately.
+
+`fixtures/realtime-done.json` contains fictional text/audio usage. Loopback WebSocket tests run the real tungstenite protocol client against a synthetic server to inspect the request cap and disabled turn detection, deliver PCM chunks plus final usage, and exercise provider errors, malformed JSON and timeouts without retries. Parser tests cover invalid base64, PCM bounds, unexpected tool output, missing usage and WAV conversion. Local-command tests prove selected audio never sends local checks remotely. Native tests cover paid-route eligibility, stale cache clearing and cancellation while retaining existing stop/microphone guards.
+
+These tests prove local protocol/serialization, usage arithmetic and playback data construction against fixtures. Production TLS, account/model/voice access, server event variations, real speech quality and real billing remain unverified. No real key was read or used and no paid audio request was made. A later manual voice Send is required for live validation.
+

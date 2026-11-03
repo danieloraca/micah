@@ -55,6 +55,37 @@ pub unsafe extern "C" fn companion_reply(input: *const c_char) -> *mut c_char {
         .into_raw()
 }
 
+/// Text-in, optional audio-out reply. No microphone data crosses this boundary.
+/// # Safety
+/// Both string pointers must be valid NUL-terminated strings during this call.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn companion_reply_with_voice(
+    input: *const c_char,
+    voice: *const c_char,
+    ticket: u64,
+) -> *mut c_char {
+    if input.is_null() || voice.is_null() {
+        return unsafe { companion_reply(input) };
+    }
+    let text = unsafe { CStr::from_ptr(input) }.to_string_lossy();
+    let voice = unsafe { CStr::from_ptr(voice) }.to_string_lossy();
+    let reply = desktop_companion::runtime::session()
+        .lock()
+        .unwrap()
+        .dispatch_audio(&text, Some(&voice), ticket);
+    CString::new(serde_json::to_string(&reply).unwrap())
+        .unwrap()
+        .into_raw()
+}
+#[unsafe(no_mangle)]
+pub extern "C" fn companion_audio_cancel() {
+    desktop_companion::voice::cancel();
+}
+#[unsafe(no_mangle)]
+pub extern "C" fn companion_audio_generation() -> u64 {
+    desktop_companion::voice::generation()
+}
+
 /// Configure an explicitly user-entered session key; never persists it.
 /// # Safety
 /// Both pointers must be live NUL-terminated strings for this call.

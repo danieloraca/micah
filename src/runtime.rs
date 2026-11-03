@@ -9,6 +9,8 @@ pub struct Reply {
     pub text: String,
     pub source: String,
     pub usage: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub audio_wav: Option<String>,
 }
 #[derive(Default)]
 pub struct Session {
@@ -45,12 +47,16 @@ impl Session {
             .to_string()
     }
     pub fn dispatch(&mut self, input: &str) -> Reply {
+        self.dispatch_audio(input, None, crate::voice::generation())
+    }
+    pub fn dispatch_audio(&mut self, input: &str, voice: Option<&str>, ticket: u64) -> Reply {
         let intent = parse(input);
         if intent != Intent::Unknown {
             return Reply {
                 text: respond(input),
                 source: format!("Local · {}", local_label(&intent)),
                 usage: "Local command — no API request or API token usage.".into(),
+                audio_wav: None,
             };
         }
         if input.trim().is_empty() || input.len() > 2000 {
@@ -58,6 +64,7 @@ impl Session {
                 text: "Use 1–2000 UTF-8 bytes of text. No request sent.".into(),
                 source: "Input not sent".into(),
                 usage: "No API request.".into(),
+                audio_wav: None,
             };
         }
         let Some(settings) = self.settings.as_ref() else {
@@ -70,25 +77,56 @@ impl Session {
                 ),
                 source: "AI off · no action".into(),
                 usage: "No API request.".into(),
+                audio_wav: None,
             };
         };
-        match ai::ask(settings, &self.history, input) {
-            Ok(answer) => {
-                if answer.completed {
-                    self.history.push(input, &answer.text);
-                }
-                Reply {
-                    text: answer.text,
-                    source: format!("OpenAI · {} · output cap {}", settings.model, settings.cap),
-                    usage: answer.usage,
-                }
+        let audio = voice.is_some();
+        let model = if audio {
+            crate::voice::MODEL
+        } else {
+            &settings.model
+        };
+        let route = if audio { "realtime" } else { "responses" };
+        let (mut reply, completed, measurement) = if let Some(voice) = voice {
+            match crate::voice::ask(settings,&self.history,input,voice,ticket) {
+                Ok(answer)=>(Reply{text:answer.text,source:format!("OpenAI audio · {} · {voice} · output cap {}",crate::voice::MODEL,settings.cap),usage:answer.usage,audio_wav:answer.wav},Some(answer.completed),Some(answer.measurement)),
+                Err(error)=>(Reply{text:format!("{error}\nSwitch to Mac voice and Send again manually for a text answer. No additional paid fallback request was made."),source:"OpenAI audio request failed".into(),usage:"Audio API usage unavailable. Cost estimate: not calculated; usage may have occurred.".into(),audio_wav:None},None,None),
             }
-            Err(error) => Reply {
-                text: error,
-                source: "OpenAI request failed".into(),
-                usage: "API-reported tokens: unavailable. Cost estimate: not calculated.".into(),
-            },
+        } else {
+            match ai::ask(settings, &self.history, input) {
+                Ok(answer) => (
+                    Reply {
+                        text: answer.text,
+                        source: format!(
+                            "OpenAI · {} · output cap {}",
+                            settings.model, settings.cap
+                        ),
+                        usage: answer.usage,
+                        audio_wav: None,
+                    },
+                    Some(answer.completed),
+                    Some(answer.measurement),
+                ),
+                Err(error) => (
+                    Reply {
+                        text: error,
+                        source: "OpenAI request failed".into(),
+                        usage: "API-reported tokens: unavailable. Cost estimate: not calculated."
+                            .into(),
+                        audio_wav: None,
+                    },
+                    None,
+                    None,
+                ),
+            }
+        };
+        if completed == Some(true) {
+            self.history.push(input, &reply.text);
         }
+        if !crate::metering::record(model, route, completed, measurement.as_ref()) {
+            reply.usage.push_str("\nLocal usage export failed; this turn may be missing from LLM Usage. No retry was sent.");
+        }
+        reply
     }
 }
 pub fn local_label(intent: &Intent) -> &'static str {
@@ -117,6 +155,11 @@ mod tests {
         // A dummy key may enable state but local commands must still bypass HTTP.
         s.configure("fixture-only".into(), ai::DEFAULT_MODEL, 128)
             .unwrap();
+        assert!(
+            s.dispatch_audio("Time.", Some("marin"), crate::voice::generation())
+                .source
+                .starts_with("Local")
+        );
         assert!(s.dispatch("Max status.").source.starts_with("Local"));
         assert!(s.history.is_empty());
         assert!(!s.public_status().contains("fixture-only"));

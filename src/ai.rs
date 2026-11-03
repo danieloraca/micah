@@ -10,7 +10,7 @@ pub const DEFAULT_CAP: u32 = 512;
 pub const MAX_PAIRS: usize = 3;
 pub const MAX_HISTORY_BYTES: usize = 12_000;
 const MAX_RESPONSE_BYTES: u64 = 256 * 1024;
-const INSTRUCTIONS: &str = "You are Mica, a friendly desktop conversation companion. Answer concisely in plain text. You have no tools, files, live device data, or ability to take actions. Never claim to have inspected or changed the user's computer. Ask the user to use Mica's local status commands for current device information. Do not claim to be the user's ChatGPT account or to know its conversations.";
+pub(crate) const INSTRUCTIONS: &str = "You are Mica, a friendly desktop conversation companion. Answer concisely in plain text. You have no tools, files, live device data, or ability to take actions. Never claim to have inspected or changed the user's computer. Ask the user to use Mica's local status commands for current device information. Do not claim to be the user's ChatGPT account or to know its conversations.";
 
 pub struct Settings {
     key: Zeroizing<String>,
@@ -19,6 +19,9 @@ pub struct Settings {
 }
 
 impl Settings {
+    pub(crate) fn api_key(&self) -> &str {
+        &self.key
+    }
     pub fn new(key: String, model: &str, cap: u32) -> Result<Self, String> {
         let key = Zeroizing::new(key);
         if key.is_empty() || key.len() > 512 || !key.bytes().all(|b| b.is_ascii_graphic()) {
@@ -54,6 +57,9 @@ pub fn validate_model_cap(model: &str, cap: u32) -> Result<(), String> {
 #[derive(Default)]
 pub struct History(VecDeque<(String, String)>);
 impl History {
+    pub(crate) fn pairs(&self) -> impl Iterator<Item = &(String, String)> {
+        self.0.iter()
+    }
     pub fn clear(&mut self) {
         self.0.clear();
     }
@@ -83,7 +89,7 @@ pub fn request_body(settings: &Settings, history: &History, input: &str) -> Valu
     messages.push(json!({"role":"user", "content":input}));
     let mut body = json!({"model":settings.model, "input":messages,
         "instructions":INSTRUCTIONS, "max_output_tokens":settings.cap,
-        "store":false, "stream":false, "tools":[], "tool_choice":"none"});
+        "service_tier":"default", "store":false, "stream":false, "tools":[], "tool_choice":"none"});
     // This default model officially supports none. Other models retain their own
     // defaults; the cap still covers reasoning tokens as well as visible text.
     if settings.model.starts_with("gpt-5.4-nano") {
@@ -97,6 +103,8 @@ pub struct Answer {
     pub text: String,
     pub usage: String,
     pub completed: bool,
+    #[serde(skip)]
+    pub measurement: crate::metering::Measurement,
 }
 
 fn count(value: Option<u64>) -> String {
@@ -121,6 +129,7 @@ pub fn parse_response(bytes: &[u8]) -> Result<Answer, String> {
         "OpenAI returned unreadable JSON. Usage unavailable; no automatic retry.".to_string()
     })?;
     let usage = usage(&value);
+    let measurement = crate::metering::Measurement::from_response(&value, false);
     let mut pieces = Vec::new();
     for item in value["output"].as_array().into_iter().flatten() {
         match item["type"].as_str() {
@@ -147,6 +156,7 @@ pub fn parse_response(bytes: &[u8]) -> Result<Answer, String> {
                         .into(),
                     usage,
                     completed: false,
+                    measurement,
                 });
             }
         }
@@ -168,6 +178,7 @@ pub fn parse_response(bytes: &[u8]) -> Result<Answer, String> {
         text,
         usage,
         completed,
+        measurement,
     })
 }
 
