@@ -119,7 +119,7 @@ impl<S: Store> Controller<S> {
             return Ok(Zeroizing::new(typed.into()));
         }
         self.store.get_key()?.ok_or_else(|| {
-            "No saved Mica OpenAI key found. Enter your key yourself and select Save/replace."
+            "No saved Micah OpenAI key found. Enter your key yourself and select Save/replace."
                 .into()
         })
     }
@@ -232,7 +232,9 @@ impl Store for MacStore {
         let file = match fs::File::open(&self.path) {
             Ok(v) => v,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Preferences::default()),
-            Err(_) => return Err("Could not read non-secret Mica settings. AI remains off.".into()),
+            Err(_) => {
+                return Err("Could not read non-secret Micah settings. AI remains off.".into());
+            }
         };
         let mut bytes = Vec::new();
         file.take(16 * 1024 + 1)
@@ -248,7 +250,7 @@ impl Store for MacStore {
         prefs.validate()?;
         let parent = self.path.parent().ok_or("Invalid settings path")?;
         fs::create_dir_all(parent)
-            .map_err(|_| "Could not create Mica settings directory.".to_string())?;
+            .map_err(|_| "Could not create Micah settings directory.".to_string())?;
         if fs::symlink_metadata(parent)
             .map_err(|_| "Could not inspect settings directory")?
             .file_type()

@@ -214,7 +214,7 @@ pub extern "C" fn companion_ai_remove_saved() -> *mut c_char {
         .unwrap()
         .remove();
     CString::new(result.err().unwrap_or_else(|| {
-        "Saved Mica key removed. AI and saved startup enablement are off.".into()
+        "Saved Micah key removed. AI and saved startup enablement are off.".into()
     }))
     .unwrap()
     .into_raw()
@@ -270,7 +270,7 @@ fn main() {
             unsafe { companion_run() };
         }
         Some("--help" | "-h") => println!(
-            "Mica — Desktop Companion\nRun the .app bundle for the floating UI and permission identity.\n--ask COMMAND   Run a read-only local command\n--voice-check   Report recognition capability; no prompts or capture"
+            "Micah — Desktop Companion\nRun the .app bundle for the floating UI and permission identity.\n--ask COMMAND   Run a read-only local command\n--voice-check   Report recognition capability; no prompts or capture"
         ),
         None => unsafe { companion_run() },
         _ => {

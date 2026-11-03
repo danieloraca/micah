@@ -8,7 +8,7 @@ from pathlib import Path
 root = Path(sys.argv[1])
 plistlib.dump({
     "Label": "local.dan.desktop-companion",
-    "ProgramArguments": [str(root / "dist/Mica.app/Contents/MacOS/desktop-companion")],
+    "ProgramArguments": [str(root / "dist/Micah.app/Contents/MacOS/desktop-companion")],
     "RunAtLoad": True,
     "ProcessType": "Interactive",
 }, sys.stdout.buffer)

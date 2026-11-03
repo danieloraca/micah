@@ -10,7 +10,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-pub const HELP: &str = "Hi Dan. I'm Mica. Try: mac status, pi status, time, or capabilities.\n\nLocal commands stay on this Mac. Optional OpenAI text answers can be enabled in AI settings using your key, with optional macOS Keychain saving. API usage is billed separately from ChatGPT. No background recording. Pause-to-send requires explicitly starting Conversation mode. Character design can come later.";
+pub const HELP: &str = "Hi Dan. I'm Micah. Try: mac status, pi status, time, or capabilities.\n\nLocal commands stay on this Mac. Optional OpenAI text answers can be enabled in AI settings using your key, with optional macOS Keychain saving. API usage is billed separately from ChatGPT. No background recording. Pause-to-send requires explicitly starting Conversation mode. Character design can come later.";
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Intent {

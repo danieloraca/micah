@@ -10,7 +10,7 @@ pub const DEFAULT_CAP: u32 = 512;
 pub const MAX_PAIRS: usize = 3;
 pub const MAX_HISTORY_BYTES: usize = 12_000;
 const MAX_RESPONSE_BYTES: u64 = 256 * 1024;
-pub(crate) const INSTRUCTIONS: &str = "You are Mica, a friendly desktop conversation companion. Answer concisely in plain text. You have no tools, files, live device data, or ability to take actions. Never claim to have inspected or changed the user's computer. Ask the user to use Mica's local status commands for current device information. Do not claim to be the user's ChatGPT account or to know its conversations.";
+pub(crate) const INSTRUCTIONS: &str = "You are Micah, a friendly desktop conversation companion. Answer concisely in plain text. You have no tools, files, live device data, or ability to take actions. Never claim to have inspected or changed the user's computer. Ask the user to use Micah's local status commands for current device information. Do not claim to be the user's ChatGPT account or to know its conversations.";
 
 pub struct Settings {
     key: Zeroizing<String>,
@@ -26,7 +26,7 @@ impl Settings {
         let key = Zeroizing::new(key);
         if key.is_empty() || key.len() > 512 || !key.bytes().all(|b| b.is_ascii_graphic()) {
             return Err(
-                "Enter an API key in Mica's secure field (session memory only). No request sent."
+                "Enter an API key in Micah's secure field (session memory only). No request sent."
                     .into(),
             );
         }

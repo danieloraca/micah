@@ -83,7 +83,7 @@ static BOOL MicaClaimInstance(void) {
     NSString *directory = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/Mica"];
     NSError *error = nil;
     if (![NSFileManager.defaultManager createDirectoryAtPath:directory withIntermediateDirectories:YES attributes:@{NSFilePosixPermissions:@0700} error:&error]) {
-        NSAlert *alert = [NSAlert new];alert.messageText = @"Mica could not open its private instance directory.";
+        NSAlert *alert = [NSAlert new];alert.messageText = @"Micah could not open its private instance directory.";
         alert.informativeText = @"No second window or AI request was started. Check access to Application Support/Mica.";[alert runModal];return NO;
     }
     NSString *path = [directory stringByAppendingPathComponent:@"instance.lock"];
@@ -95,7 +95,7 @@ static BOOL MicaClaimInstance(void) {
         return YES;
     }
     if (claimed < 0) {
-        NSAlert *alert=[NSAlert new];alert.messageText=@"Mica could not verify its single running instance.";
+        NSAlert *alert=[NSAlert new];alert.messageText=@"Micah could not verify its single running instance.";
         alert.informativeText=@"Check permissions for Application Support/Mica/instance.lock. No second window or AI request was started.";[alert runModal];return NO;
     }
     // A read-only PID helps foreground the existing process. The notification
@@ -173,14 +173,14 @@ static BOOL MicaClaimInstance(void) {
     self.panel = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 460, 735)
         styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable
         backing:NSBackingStoreBuffered defer:NO];
-    self.panel.title = @"Mica — Local";
+    self.panel.title = @"Micah — Local";
     self.panel.delegate = self;
     self.panel.floatingPanel = YES;
     self.panel.level = NSFloatingWindowLevel;
     self.panel.hidesOnDeactivate = NO;
     self.panel.releasedWhenClosed = NO;
     [self.panel center];
-    [self label:@"◇  Mica" frame:NSMakeRect(18, 505, 424, 28) size:20];
+    [self label:@"◇  Micah" frame:NSMakeRect(18, 505, 424, 28) size:20];
     [self label:@"Local commands • Optional OpenAI text • Placeholder appearance" frame:NSMakeRect(18, 475, 424, 24) size:12];
     NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(18, 224, 424, 245)];
     scroll.hasVerticalScroller = YES;
@@ -250,20 +250,20 @@ static BOOL MicaClaimInstance(void) {
     self.speaker.delegate = self;
     self.statusItem = [NSStatusBar.systemStatusBar statusItemWithLength:NSVariableStatusItemLength];
     self.statusItem.button.title = @"◇";
-    self.statusItem.button.toolTip = @"Mica (offline)";
+    self.statusItem.button.toolTip = @"Micah (offline)";
     NSMenu *menu = [NSMenu new];
-    NSMenuItem *show = [menu addItemWithTitle:@"Show Mica" action:@selector(show:) keyEquivalent:@""];
+    NSMenuItem *show = [menu addItemWithTitle:@"Show Micah" action:@selector(show:) keyEquivalent:@""];
     show.target = self;
-    NSMenuItem *hide = [menu addItemWithTitle:@"Hide Mica" action:@selector(hide:) keyEquivalent:@""];
+    NSMenuItem *hide = [menu addItemWithTitle:@"Hide Micah" action:@selector(hide:) keyEquivalent:@""];
     hide.target = self;
     [menu addItem:NSMenuItem.separatorItem];
-    NSMenuItem *quit = [menu addItemWithTitle:@"Quit Mica" action:@selector(quit:) keyEquivalent:@"q"];
+    NSMenuItem *quit = [menu addItemWithTitle:@"Quit Micah" action:@selector(quit:) keyEquivalent:@"q"];
     quit.target = self;
     self.statusItem.menu = menu;
     NSMenu *mainMenu = [NSMenu new];
     NSMenuItem *appItem = [NSMenuItem new];
     NSMenu *appMenu = [NSMenu new];
-    NSMenuItem *appQuit = [appMenu addItemWithTitle:@"Quit Mica" action:@selector(quit:) keyEquivalent:@"q"];
+    NSMenuItem *appQuit = [appMenu addItemWithTitle:@"Quit Micah" action:@selector(quit:) keyEquivalent:@"q"];
     appQuit.target = self;
     appItem.submenu = appMenu;
     [mainMenu addItem:appItem];
@@ -376,7 +376,7 @@ static BOOL MicaClaimInstance(void) {
         return;
     }
     NSAlert *notice=[NSAlert new];notice.messageText=@"Send voice turns automatically after a pause?";
-    notice.informativeText=@"Click to talk starts a visible conversation session. After recognized speech and the selected quiet pause, Mica sends the transcript without another click. With AI enabled, non-command text and bounded history go to OpenAI and each turn can incur API charges, including the selected paid voice. Audio input stays on-device.\n\nThe microphone is off while waiting for or playing a reply, then starts again. Stop voice, Stop listening, hiding Mica or switching away ends the session. Sessions stop at 3 minutes or 10 turns; silent turns stop at 15 seconds. Errors and long uninterrupted speech stop for review. Pause detection can mistake a thinking pause or background speech for your turn. This option is off again at launch; no recording starts from this dialog.";
+    notice.informativeText=@"Click to talk starts a visible conversation session. After recognized speech and the selected quiet pause, Micah sends the transcript without another click. With AI enabled, non-command text and bounded history go to OpenAI and each turn can incur API charges, including the selected paid voice. Audio input stays on-device.\n\nThe microphone is off while waiting for or playing a reply, then starts again. Stop voice, Stop listening, hiding Micah or switching away ends the session. Sessions stop at 3 minutes or 10 turns; silent turns stop at 15 seconds. Errors and long uninterrupted speech stop for review. Pause detection can mistake a thinking pause or background speech for your turn. This option is off again at launch; no recording starts from this dialog.";
     [notice addButtonWithTitle:@"Use conversation mode"];[notice addButtonWithTitle:@"Cancel"];
     if([notice runModal]!=NSAlertFirstButtonReturn) sender.state=NSControlStateValueOff;
     self.status.stringValue=sender.state==NSControlStateValueOn ? @"Conversation ready. Click to talk once; pause to send. Stop voice ends the session." : @"Conversation off. Microphone off.";
@@ -489,7 +489,7 @@ static BOOL MicaClaimInstance(void) {
     NSAlert *alert = [NSAlert new];
     alert.messageText = @"OpenAI settings and macOS Keychain";
     [self stopVoice:nil];
-    alert.informativeText = @"Enable AI now uses your entered key for this session even if optional saving fails. Send (or pause-to-send in an explicitly started conversation) transmits non-command text and up to 3 previous AI turns (12 KB) to OpenAI. API billing is separate from ChatGPT; the output cap is not a spending limit. Microphone audio stays local. No AI tools. Usage metadata (model, time and token counts) is saved locally for LLM Usage; prompts, replies, audio and keys are excluded.\n\nSave/replace uses your encrypted macOS default (normally login) Keychain. macOS may ask permission; only you should answer that prompt. No plaintext key file. A blank field uses a saved Mica key. Save settings alone keeps AI off. Nothing here sends an API request.";
+    alert.informativeText = @"Enable AI now uses your entered key for this session even if optional saving fails. Send (or pause-to-send in an explicitly started conversation) transmits non-command text and up to 3 previous AI turns (12 KB) to OpenAI. API billing is separate from ChatGPT; the output cap is not a spending limit. Microphone audio stays local. No AI tools. Usage metadata (model, time and token counts) is saved locally for LLM Usage; prompts, replies, audio and keys are excluded.\n\nSave/replace uses your encrypted macOS default (normally login) Keychain. macOS may ask permission; only you should answer that prompt. No plaintext key file. A blank field uses a saved Micah key. Save settings alone keeps AI off. Nothing here sends an API request.";
     NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 360, 230)];
     NSTextField *keyLabel = [NSTextField wrappingLabelWithString:[settings[@"key_saved"] boolValue] ? @"Saved-key preference present (not probed). Blank keeps it; type to replace." : @"API key — optional save; never paste into chat or Git"];
     keyLabel.frame = NSMakeRect(0, 187, 360, 40); [form addSubview:keyLabel];
@@ -515,11 +515,11 @@ static BOOL MicaClaimInstance(void) {
     NSModalResponse choice = [alert runModal];
     [alert.window makeFirstResponder:nil];
     if (choice == NSAlertThirdButtonReturn) {
-        NSAlert *confirm = [NSAlert new]; confirm.messageText = @"Remove Mica's saved OpenAI key?";
-        confirm.informativeText = @"Only Mica's Keychain item is removed. AI turns off and saved startup enablement is cleared. Model/cap remain. No API request is sent.";
+        NSAlert *confirm = [NSAlert new]; confirm.messageText = @"Remove Micah's saved OpenAI key?";
+        confirm.informativeText = @"Only Micah's Keychain item is removed. AI turns off and saved startup enablement is cleared. Model/cap remain. No API request is sent.";
         [confirm addButtonWithTitle:@"Remove saved key"]; [confirm addButtonWithTitle:@"Cancel"];
         if ([confirm runModal] == NSAlertFirstButtonReturn) {
-            self.busy=YES;[self refreshControls];self.status.stringValue=@"Removing Mica's saved key…";
+            self.busy=YES;[self refreshControls];self.status.stringValue=@"Removing Micah's saved key…";
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED,0), ^{
                 char *raw=companion_ai_remove_saved();NSString *message=[NSString stringWithUTF8String:raw];companion_reply_free(raw);
                 dispatch_async(dispatch_get_main_queue(), ^{[self finishAISetup:message enable:NO];});
@@ -603,9 +603,9 @@ static BOOL MicaClaimInstance(void) {
     [self stopVoice:nil];
     NSString *advice = @"Review any partial transcript or use text.";
     if ([error.domain isEqualToString:@"kLSRErrorDomain"] && error.code == 201) {
-        advice = @"macOS is blocking recognition because Siri or Dictation is disabled. You can continue using text and Speak reply. If you choose to review Dictation, open System Settings → Keyboard → Dictation and read Apple's privacy explanation. Mica has not changed this setting or enabled Siri.";
+        advice = @"macOS is blocking recognition because Siri or Dictation is disabled. You can continue using text and Speak reply. If you choose to review Dictation, open System Settings → Keyboard → Dictation and read Apple's privacy explanation. Micah has not changed this setting or enabled Siri.";
     } else if ([error.domain isEqualToString:@"kLSRErrorDomain"] && error.code == 102) {
-        advice = @"Required local speech assets are not installed. Mica will not download them or use a server. Please use text.";
+        advice = @"Required local speech assets are not installed. Micah will not download them or use a server. Please use text.";
     }
     NSString *message = [NSString stringWithFormat:@"%@\n\nNative error: %@ (%ld)\n%@\n\nMicrophone off. No server fallback was attempted. %@\n\n%@", context, error.domain, (long)error.code, error.localizedDescription, advice, [self voiceDetails]];
     self.output.string = message;
@@ -848,7 +848,7 @@ void companion_voice_check(void) {
         printf("English (US) device recognition supported: %s\n", recognizer.supportsOnDeviceRecognition ? "yes" : "no");
         printf("Speech authorization status: %ld (0=undetermined, 1=denied, 2=restricted, 3=authorized)\n", (long)SFSpeechRecognizer.authorizationStatus);
         printf("No permission prompt, audio capture, model download, or recognition request started.\n");
-        printf("CLI permission identity can differ from the app. Use Voice info in Mica for its actual authorization state.\n");
+        printf("CLI permission identity can differ from the app. Use Voice info in Micah for its actual authorization state.\n");
     }
 }
 
