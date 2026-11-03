@@ -1,0 +1,14 @@
+[package]
+name = "desktop-companion"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+description = "An offline macOS companion with a Rust command core and native AppKit controls"
+license = "MIT"
+
+[dependencies]
+
+[profile.release]
+strip = true
+lto = "thin"
+
